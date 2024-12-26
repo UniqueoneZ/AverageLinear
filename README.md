@@ -8,7 +8,7 @@ The main code framework is from the official SegRNN code available at:https://gi
 
 
 The overall structure is shown as follow:
-![](image/overall_structure.png)
+![](image/overall_structure.jpg)
 
 
 By enhancing these three changes, we conduct the experiments, the result is shown as follow:
