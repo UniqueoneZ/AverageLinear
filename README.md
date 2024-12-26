@@ -1,4 +1,3 @@
-Implement of AverageLinear, 
 # AverageLinear
 
 This is the official implement of AverageLinear, which use channel embedding with simple averaging and parameter-independent strategy to enhance time series forecasting.
