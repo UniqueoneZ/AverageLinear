@@ -10,7 +10,7 @@ The overall structure is shown as follow:
 ![](image/overall_structure.jpg)
 
 
-By enhancing these three changes, we conduct the experiments, the result is shown as follow:
+By enhancing these changes, we conduct the experiments, the result is shown as follow:
 ![](image/result.jpg)
 
 To use the AverageLinear, first:
