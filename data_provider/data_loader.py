@@ -131,13 +131,8 @@ class Dataset_ETT_minute(Dataset):
         self.scaler = StandardScaler()
         df_raw = pd.read_csv(os.path.join(self.root_path,
                                           self.data_path))
-        #完整版的训练长度
         border1s = [0, 12 * 30 * 24 * 4 - self.seq_len, 12 * 30 * 24 * 4 + 4 * 30 * 24 * 4 - self.seq_len]
         border2s = [12 * 30 * 24 * 4, 12 * 30 * 24 * 4 + 4 * 30 * 24 * 4, 12 * 30 * 24 * 4 + 8 * 30 * 24 * 4]
-        
-        #为了缩减版专门准备的段落长度
-        # border1s = [0, 12 * 30 * 24 * 3 - self.seq_len, 12 * 30 * 24 * 3 + int(12 * 30 * 24 * 0.5) - self.seq_len]
-        # border2s = [12 * 30 * 24 * 3, 12 * 30 * 24 * 3 + int(12 * 30 * 24 * 0.5), 12 * 30 * 24 * 3 + 12 * 30 * 24 * 1]
         
         border1 = border1s[self.set_type]
         border2 = border2s[self.set_type]
