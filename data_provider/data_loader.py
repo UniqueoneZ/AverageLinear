@@ -42,15 +42,8 @@ class Dataset_ETT_hour(Dataset):
 
     def __read_data__(self):
         self.scaler = StandardScaler()
-        df_raw = pd.read_csv(os.path.join(self.root_path,
-                                          self.data_path))
+        df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))
 
-        
-        #为了缩减版专门准备的段落长度
-        # border1s = [0, int(12 * 30 * 24 * 0.8) - self.seq_len, int(12 * 30 * 24 * 0.9) - self.seq_len]
-        # border2s = [int(12 * 30 * 24 * 0.8), int(12 * 30 * 24 * 0.9), 12 * 30 * 24]
-        
-        #完整版的训练长度
         border1s = [0, 12 * 30 * 24 - self.seq_len, 12 * 30 * 24 + 4 * 30 * 24 - self.seq_len]
         border2s = [12 * 30 * 24, 12 * 30 * 24 + 4 * 30 * 24, 12 * 30 * 24 + 8 * 30 * 24]
         border1 = border1s[self.set_type]
