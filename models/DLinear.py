@@ -1,70 +1,87 @@
-'''
-A complete implementation version containing all code (including ablation components)
-'''
-import numpy as np
 import torch
 import torch.nn as nn
-from layers.RevIN import RevIN
-from einops import rearrange, repeat, einsum
 import torch.nn.functional as F
+import numpy as np
 
-class Model(nn.Module):
-    def __init__(self, configs):
-        super(Model, self).__init__()
-
-        # get parameters
-        self.batch_size = configs.batch_size
-        self.seq_len = configs.seq_len
-        self.pred_len = configs.pred_len
-        self.enc_in = configs.enc_in
-        self.d_model = configs.d_model
-        self.dropout = configs.dropout
-
-        self.rnn_type = configs.rnn_type
-        self.dec_way = configs.dec_way
-        self.seg_len = configs.seg_len
-        self.channel_id = configs.channel_id
-        self.revin = configs.revin
-        self.d_state = configs.d_state
-        #we can get the feature_num directly
-        #however, this features stands for the task label, it's not the same idea as we need the number of the variate
-
-
-        self.seg_num_x = self.seq_len//self.seg_len
-        self.seg_num_y = self.pred_len // self.seg_len
-
-        if self.revin:
-            self.revinLayer = RevIN(self.enc_in, affine=False, subtract_last=False)
-
-        self.predict = nn.Sequential(
-            nn.Linear(self.seg_num_x, self.seg_num_y),
-        )
-
-
+class moving_avg(nn.Module):
+    """
+    Moving average block to highlight the trend of time series
+    """
+    def __init__(self, kernel_size, stride):
+        super(moving_avg, self).__init__()
+        self.kernel_size = kernel_size
+        self.avg = nn.AvgPool1d(kernel_size=kernel_size, stride=stride, padding=0)
 
     def forward(self, x):
+        # padding on the both ends of time series
+        front = x[:, 0:1, :].repeat(1, (self.kernel_size - 1) // 2, 1)
+        end = x[:, -1:, :].repeat(1, (self.kernel_size - 1) // 2, 1)
+        x = torch.cat([front, x, end], dim=1)
+        x = self.avg(x.permute(0, 2, 1))
+        x = x.permute(0, 2, 1)
+        return x
 
-        #x shape: b,l,c
-        #normalize
-        if self.revin:
-            x = self.revinLayer(x, 'norm')
+
+class series_decomp(nn.Module):
+    """
+    Series decomposition block
+    """
+    def __init__(self, kernel_size):
+        super(series_decomp, self).__init__()
+        self.moving_avg = moving_avg(kernel_size, stride=1)
+
+    def forward(self, x):
+        moving_mean = self.moving_avg(x)
+        res = x - moving_mean
+        return res, moving_mean
+
+class Model(nn.Module):
+    """
+    Decomposition-Linear
+    """
+    def __init__(self, configs):
+        super(Model, self).__init__()
+        self.seq_len = configs.seq_len
+        self.pred_len = configs.pred_len
+
+        # Decompsition Kernel Size
+        kernel_size = 25
+        self.decompsition = series_decomp(kernel_size)
+        self.individual = configs.individual
+        self.channels = configs.enc_in
+
+        if self.individual:
+            self.Linear_Seasonal = nn.ModuleList()
+            self.Linear_Trend = nn.ModuleList()
+            
+            for i in range(self.channels):
+                self.Linear_Seasonal.append(nn.Linear(self.seq_len,self.pred_len))
+                self.Linear_Trend.append(nn.Linear(self.seq_len,self.pred_len))
+
+                # Use this two lines if you want to visualize the weights
+                # self.Linear_Seasonal[i].weight = nn.Parameter((1/self.seq_len)*torch.ones([self.pred_len,self.seq_len]))
+                # self.Linear_Trend[i].weight = nn.Parameter((1/self.seq_len)*torch.ones([self.pred_len,self.seq_len]))
         else:
-            means = x.mean(1, keepdim = True).detach()
-            x = x - means
-            stdev = torch.sqrt(torch.var(x, dim = 1, keepdim = True, unbiased = False) + 1e-5)
-            x /= stdev
-        x = x.permute(0,2,1)# b,c,l
-        x = x.reshape(x.shape[0], self.enc_in, self.seg_num_x, self.seg_len) # b, c, n, w
-        x = torch.mean(x, dim = 3)#b,c,n
+            self.Linear_Seasonal = nn.Linear(self.seq_len,self.pred_len)
+            self.Linear_Trend = nn.Linear(self.seq_len,self.pred_len)
+            
+            # Use this two lines if you want to visualize the weights
+            # self.Linear_Seasonal.weight = nn.Parameter((1/self.seq_len)*torch.ones([self.pred_len,self.seq_len]))
+            # self.Linear_Trend.weight = nn.Parameter((1/self.seq_len)*torch.ones([self.pred_len,self.seq_len]))
 
-        y = self.predict(x) #b,c,m
-        #denorm
-        y=y.permute(0,2,1) #b,m,c
-        if self.revin:
-            y = self.revinLayer(y, 'denorm')
+    def forward(self, x):
+        # x: [Batch, Input length, Channel]
+        seasonal_init, trend_init = self.decompsition(x)
+        seasonal_init, trend_init = seasonal_init.permute(0,2,1), trend_init.permute(0,2,1)
+        if self.individual:
+            seasonal_output = torch.zeros([seasonal_init.size(0),seasonal_init.size(1),self.pred_len],dtype=seasonal_init.dtype).to(seasonal_init.device)
+            trend_output = torch.zeros([trend_init.size(0),trend_init.size(1),self.pred_len],dtype=trend_init.dtype).to(trend_init.device)
+            for i in range(self.channels):
+                seasonal_output[:,i,:] = self.Linear_Seasonal[i](seasonal_init[:,i,:])
+                trend_output[:,i,:] = self.Linear_Trend[i](trend_init[:,i,:])
         else:
-            #y.shape : b,m,c
-            y = y * (stdev[:, 0, :].unsqueeze(1).repeat(1, self.seg_num_y, 1))
-            y = y + (means[:, 0, :].unsqueeze(1).repeat(1, self.seg_num_y, 1))
-        return y
+            seasonal_output = self.Linear_Seasonal(seasonal_init)
+            trend_output = self.Linear_Trend(trend_init)
 
+        x = seasonal_output + trend_output
+        return x.permute(0,2,1) # to [Batch, Output length, Channel]
