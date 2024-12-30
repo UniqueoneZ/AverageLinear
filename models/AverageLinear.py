@@ -5,6 +5,7 @@ from layers.RevIN import RevIN
 from einops import rearrange, repeat, einsum
 import torch.nn.functional as F
 
+#define a residual block
 class ResidualBlock(nn.Module):
     def __init__(self, features):
         super(ResidualBlock, self).__init__()
@@ -35,7 +36,7 @@ class Model(nn.Module):
         self.is_training = configs.is_training
 
 
-        #对于所有的周期模式以及周期函数都设置独立的预测函数
+        #set independent predict layers for all channels
         if self.channel_id:
             self.predict_layers =  nn.ModuleList([
             nn.Sequential(
@@ -55,18 +56,16 @@ class Model(nn.Module):
                 nn.Linear(self.d_model, self.pred_len, bias = False)
             )
 
-        #对通道进行预测
 
 
-
-        #定义拓展的通道数
+        #define the expanded channel number
         self.channel_number = configs.c_layers
 
-        #定义一个通道层
+        #define independent predict layers for expanded channels
         self.predict_layers_list = nn.ModuleList([
-            nn.ModuleList([  # 内部再使用 nn.ModuleList
+            nn.ModuleList([  
                 nn.Sequential(
-                    nn.Linear(self.seq_len, self.d_model, bias=False),  # 输出层
+                    nn.Linear(self.seq_len, self.d_model, bias=False),  
                     ResidualBlock(self.d_model),
                     nn.SiLU(),
                     nn.Dropout(self.dropout),
@@ -75,10 +74,10 @@ class Model(nn.Module):
             ]) for i in range(self.channel_number)
         ])
 
-
+        #channel embeddding layer
         self.channel_layer = nn.ModuleList([
             nn.Sequential(
-            nn.Linear(self.enc_in, 2 * self.enc_in, bias = False),  # 输出层
+            nn.Linear(self.enc_in, 2 * self.enc_in, bias = False),  
             ResidualBlock(2 * self.enc_in),
             nn.SiLU(),
             nn.Dropout(self.dropout),
@@ -106,9 +105,8 @@ class Model(nn.Module):
             x1 = x.clone()
             x_clone.append(self.channel_layer[i](x1.permute(0,2,1)).permute(0,2,1))
         
-        #定义原始数据预测出来的结果
+        #define predict results from original data
         y = torch.zeros(batch_size, self.enc_in, self.pred_len).to(x.device)
-        #定义通独通关
         if self.channel_id:
             for i in range(self.enc_in):
                 y[:,i,:] = self.predict_layers[i](x[:,i,:])
@@ -116,17 +114,16 @@ class Model(nn.Module):
             for i in range(self.enc_in):
                 y[:,i,:] = self.predict_layers(x[:,i,:])
 
-        #定义拓展数据预测出来的结果
+        #define predict results from expanded data
         y_list = []
         for i in range(self.channel_number):
             y_list.append(torch.zeros(batch_size, self.enc_in, self.pred_len).to(x.device))
         
-        #预测结果
         for i in range(self.channel_number):
             for j in range(self.enc_in):
                 y_list[i][:,j,:] = self.predict_layers_list[i][j](x_clone[i][:,j,:])
     
-        #累加结果
+        #Average
         for i in range(self.channel_number):
             y += y_list[i]/self.channel_number
         
