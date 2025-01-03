@@ -1,6 +1,6 @@
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
-from models import Informer, Autoformer, Transformer, DLinear, Linear, NLinear, PatchTST, AverageLinear
+from models import Informer, Autoformer, Transformer, DLinear, Linear, NLinear, PatchTST, AverageLinear, LightAverageLinear_weather, LightAverageLinear_electricity
 from utils.tools import EarlyStopping, adjust_learning_rate, visual, test_params_flop
 from utils.metrics import metric
 
@@ -34,6 +34,9 @@ class Exp_Main(Exp_Basic):
             'Linear': Linear,
             'PatchTST': PatchTST,
             'AverageLinear':AverageLinear,
+            'LightAverageLinear_weather':LightAverageLinear_weather,
+            'LightAverageLinear_electricity':LightAverageLinear_electricity,
+            'LightAverageLinear_etth1':LightAverageLinear_etth1,
         }
         model = model_dict[self.args.model].Model(self.args).float()
 
@@ -203,16 +206,16 @@ class Exp_Main(Exp_Basic):
             else:
                 print('Updating learning rate to {}'.format(scheduler.get_last_lr()[0]))
 
-        best_model_path = path + '/' + 'checkpoint.pth'
-        self.model.load_state_dict(torch.load(best_model_path))
+        best_model_path = 'checkpoints' + '/' + 'checkpoint.pth'
+        self.model = torch.load(best_model_path)
         return self.model
 
     def test(self, setting, test=0):
         test_data, test_loader = self._get_data(flag='test')
         
         if test:
-            print('loading model')
-            self.model.load_state_dict(torch.load(os.path.join('./checkpoints/' + setting, 'checkpoint.pth')))
+            best_model_path = 'checkpoints' + '/' + 'checkpoint.pth'
+            self.model = torch.load(best_model_path)
         preds = []
         trues = []
         inputx = []
