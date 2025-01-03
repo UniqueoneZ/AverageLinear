@@ -35,16 +35,15 @@ class Model(nn.Module):
         self.revin = configs.revin
         self.is_training = configs.is_training
         
-        
+        # the first one means grouped channels, the second means left channels
         self.elements_to_remove =  [[1, 2, 3, 5, 6, 8, 9, 10, 19], [4, 7], [11, 12], [16, 17, 18]]
         self.elements_to_remove1 = [0, 13, 14, 15, 20]
         
 
-        #对于所有的周期模式以及周期函数都设置独立的预测函数
         if self.channel_id:
             self.predict_layers =  nn.ModuleList([
             nn.Sequential(
-                nn.Linear(self.seq_len, self.d_model, bias = False),  # 输出层
+                nn.Linear(self.seq_len, self.d_model, bias = False),  
                 ResidualBlock(self.d_model),
                 nn.SiLU(),
                 nn.Dropout(self.dropout),
@@ -53,7 +52,7 @@ class Model(nn.Module):
             ])
             self.predict_layers1 =  nn.ModuleList([
             nn.Sequential(
-                nn.Linear(self.seq_len, self.d_model, bias = False),  # 输出层
+                nn.Linear(self.seq_len, self.d_model, bias = False),  
                 ResidualBlock(self.d_model),
                 nn.SiLU(),
                 nn.Dropout(self.dropout),
@@ -61,14 +60,14 @@ class Model(nn.Module):
             ) for _ in range(len(self.elements_to_remove1))
             ])
 
-        #定义拓展的通道数
+
         self.channel_number = configs.c_layers
 
-        #定义一个通道层
+
         self.predict_layers_list = nn.ModuleList([
-            nn.ModuleList([  # 内部再使用 nn.ModuleList
+            nn.ModuleList([ 
                 nn.Sequential(
-                    nn.Linear(self.seq_len, self.d_model, bias=False),  # 输出层
+                    nn.Linear(self.seq_len, self.d_model, bias=False), 
                     ResidualBlock(self.d_model),
                     nn.SiLU(),
                     nn.Dropout(self.dropout),
@@ -77,9 +76,9 @@ class Model(nn.Module):
             ]) for i in range(self.channel_number)
         ])
         self.predict_layers_list1 = nn.ModuleList([
-            nn.ModuleList([  # 内部再使用 nn.ModuleList
+            nn.ModuleList([  
                 nn.Sequential(
-                    nn.Linear(self.seq_len, self.d_model, bias=False),  # 输出层
+                    nn.Linear(self.seq_len, self.d_model, bias=False), 
                     ResidualBlock(self.d_model),
                     nn.SiLU(),
                     nn.Dropout(self.dropout),
@@ -91,7 +90,7 @@ class Model(nn.Module):
 
         self.channel_layer = nn.ModuleList([
             nn.Sequential(
-            nn.Linear(self.enc_in, 2 * self.enc_in, bias = False),  # 输出层
+            nn.Linear(self.enc_in, 2 * self.enc_in, bias = False),  
             ResidualBlock(2 * self.enc_in),
             nn.SiLU(),
             nn.Dropout(self.dropout),
@@ -119,20 +118,20 @@ class Model(nn.Module):
             x1 = x.clone()
             x_clone.append(self.channel_layer[i](x1.permute(0,2,1)).permute(0,2,1))
         
-        #定义原始数据预测出来的结果
+
         y = torch.zeros(batch_size, self.enc_in, self.pred_len).to(x.device)
-        #定义通独通关
+
         for i in range(len(self.elements_to_remove)):
             y[:,self.elements_to_remove[i],:] = self.predict_layers[i](x[:,self.elements_to_remove[i],:])
         for i in range(len(self.elements_to_remove1)):
             y[:,self.elements_to_remove1[i],:] = self.predict_layers1[i](x[:,self.elements_to_remove1[i],:])
 
-        #定义拓展数据预测出来的结果
+
         y_list = []
         for i in range(self.channel_number):
             y_list.append(torch.zeros(batch_size, self.enc_in, self.pred_len).to(x.device))
         
-        #预测结果
+
         for i in range(self.channel_number):
             for j in range(len(self.elements_to_remove)):
                 y_list[i][:,self.elements_to_remove[j],:] = self.predict_layers_list[i][j](x_clone[i][:,self.elements_to_remove[j],:])
@@ -140,7 +139,7 @@ class Model(nn.Module):
             for j in range(len(self.elements_to_remove1)):
                 y_list[i][:,self.elements_to_remove1[j],:] = self.predict_layers_list1[i][j](x_clone[i][:,self.elements_to_remove1[j],:])
     
-        #累加结果
+
         for i in range(self.channel_number):
             y += y_list[i]/self.channel_number
         
