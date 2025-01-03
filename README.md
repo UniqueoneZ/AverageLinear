@@ -1,6 +1,6 @@
 # AverageLinear
 
-This is the official implement of AverageLinear, which use channel embedding with simple averaging and parameter-independent strategy to enhance time series forecasting.
+This is the official implement of AverageLinear, available at https://arxiv.org/abs/2412.20727, which use channel embedding with simple averaging and parameter-independent strategy to enhance time series forecasting.
 
 
 The main code framework is from the official SegRNN code available at:https://github.com/lss-1138/SegRNN. We would like to express our sincere gratitude.
