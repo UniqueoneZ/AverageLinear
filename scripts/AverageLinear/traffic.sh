@@ -107,11 +107,14 @@ do
       --features M \
       --seq_len $seq_len \
       --pred_len $pred_len \
+      --seg_len 1 \
       --enc_in 862 \
       --d_model 512 \
-      --dropout 0.15 \
+      --dropout 0.2 \
       --train_epochs 10 \
       --patience 3 \
+      --rnn_type gru \
+      --dec_way pmf \
       --channel_id 0 \
       --loss mse \
       --revin 1 \
