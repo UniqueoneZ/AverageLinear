@@ -11,7 +11,7 @@ The overall structure is shown as follow:
 
 
 By enhancing these changes, we conduct the experiments, the result is shown as follow:
-![](image/resul1t.jpg)
+![](image/result.jpg)
 
 To use the AverageLinear, first:
 - create a dataset file and add the corresponding datasets.
