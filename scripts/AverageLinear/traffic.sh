@@ -119,5 +119,5 @@ do
       --loss mse \
       --revin 1 \
       --c_layers 2 \
-      --itr 1 --batch_size 256 --learning_rate 0.003 > logs/LongForecasting/$model_name'_'$model_id_name'_'$seq_len'_'$pred_len.log
+      --itr 1 --batch_size 256 --learning_rate 0.002 > logs/LongForecasting/$model_name'_'$model_id_name'_'$seq_len'_'$pred_len.log
 done
