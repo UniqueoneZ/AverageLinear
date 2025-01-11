@@ -1,6 +1,6 @@
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
-from models import Informer, Autoformer, Transformer, DLinear, Linear, NLinear, PatchTST, AverageLinear, LightAverageLinear_weather, LightAverageLinear_electricity
+from models import Informer, Autoformer, Transformer, DLinear, Linear, NLinear, PatchTST, VanillaRNN, SegRNN, LightAverageLinear_weather, LightAverageLinear_electricity, LightAverageLinear_etth1,  LightAverageLinear_etth2,  LightAverageLinear_ettm1,  LightAverageLinear_ettm2,  LightAverageLinear_traffic
 from utils.tools import EarlyStopping, adjust_learning_rate, visual, test_params_flop
 from utils.metrics import metric
 
@@ -37,6 +37,10 @@ class Exp_Main(Exp_Basic):
             'LightAverageLinear_weather':LightAverageLinear_weather,
             'LightAverageLinear_electricity':LightAverageLinear_electricity,
             'LightAverageLinear_etth1':LightAverageLinear_etth1,
+            'LightAverageLinear_etth2':LightAverageLinear_etth2,
+            'LightAverageLinear_ettm1':LightAverageLinear_ettm1,
+            'LightAverageLinear_ettm2':LightAverageLinear_ettm2,
+            'LightAverageLinear_traffic':LightAverageLinear_traffic
         }
         model = model_dict[self.args.model].Model(self.args).float()
 
