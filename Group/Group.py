@@ -20,7 +20,7 @@ rows_to_keep = 12 * 30 * 24 # Etth1, Etth2
 data_70_percent = data.iloc[:rows_to_keep]
 
 
-# restore the training dataset
+# save the training dataset
 output_file_path = r'datasets\etth107.csv'
 data_70_percent.to_csv(output_file_path, index=False)
 
