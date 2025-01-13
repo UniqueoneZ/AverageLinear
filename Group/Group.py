@@ -27,7 +27,7 @@ data_70_percent.to_csv(output_file_path, index=False)
 # define the boundary, channel's correlations with other channels are all below this value will be not be grouped.
 linear_boundary = 0.8
 
-file_path = r"datasets\ettm207.csv"
+file_path = r"datasets\etth107.csv"
 data = pd.read_csv(file_path).iloc[:, 1:]
 
 #calculate the spearman correlations 
