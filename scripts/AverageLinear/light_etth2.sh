@@ -8,9 +8,9 @@ fi
 model_name=LightAverageLinear_etth2
 
 root_path_name=./dataset/
-data_path_name=etth2.csv
-model_id_name=etth2
-data_name=custom
+data_path_name=ETTh2.csv
+model_id_name=ETTh2
+data_name=ETTh2
 
 seq_len=96
 for pred_len in 96
