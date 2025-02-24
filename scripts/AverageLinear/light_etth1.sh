@@ -8,8 +8,8 @@ fi
 model_name=LightAverageLinear_etth1
 
 root_path_name=./dataset/
-data_path_name=weather.csv
-model_id_name=weather
+data_path_name=etth1.csv
+model_id_name=etth1
 data_name=custom
 
 seq_len=96
