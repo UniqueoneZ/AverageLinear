@@ -5,11 +5,11 @@ fi
 if [ ! -d "./logs/LongForecasting" ]; then
     mkdir ./logs/LongForecasting
 fi
-model_name=LightAverageLinear_weather
+model_name=LightAverageLinear_etth2
 
 root_path_name=./dataset/
-data_path_name=weather.csv
-model_id_name=weather
+data_path_name=etth2.csv
+model_id_name=etth2
 data_name=custom
 
 seq_len=96
