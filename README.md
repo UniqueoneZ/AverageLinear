@@ -16,3 +16,8 @@ After the incoprating of Transformer encoders, the overall structure is shown as
 
 The updated model now achieves the following performance:  
 ![](image/result.jpg)
+
+The results can be reproduced by:
+```sh
+sh run_main.sh
+
