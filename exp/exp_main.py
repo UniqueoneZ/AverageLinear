@@ -1,6 +1,6 @@
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
-from models import Informer, Autoformer, Transformer, DLinear, Linear, NLinear, PatchTST, VanillaRNN, SegRNN, LightAverageLinear_weather, LightAverageLinear_electricity, LightAverageLinear_etth1,  LightAverageLinear_etth2,  LightAverageLinear_ettm1,  LightAverageLinear_ettm2,  LightAverageLinear_traffic
+from models import Informer, Autoformer, Transformer, DLinear, Linear, NLinear, PatchTST, AverageTime, VanillaRNN, SegRNN, LightAverageTime_weather, LightAverageTime_electricity, LightAverageTime_etth1,  LightAverageTime_etth2,  LightAverageTime_ettm1,  LightAverageTime_ettm2,  LightAverageTime_traffic
 from utils.tools import EarlyStopping, adjust_learning_rate, visual, test_params_flop
 from utils.metrics import metric
 
@@ -33,14 +33,14 @@ class Exp_Main(Exp_Basic):
             'NLinear': NLinear,
             'Linear': Linear,
             'PatchTST': PatchTST,
-            'AverageLinear':AverageLinear,
-            'LightAverageLinear_weather':LightAverageLinear_weather,
-            'LightAverageLinear_electricity':LightAverageLinear_electricity,
-            'LightAverageLinear_etth1':LightAverageLinear_etth1,
-            'LightAverageLinear_etth2':LightAverageLinear_etth2,
-            'LightAverageLinear_ettm1':LightAverageLinear_ettm1,
-            'LightAverageLinear_ettm2':LightAverageLinear_ettm2,
-            'LightAverageLinear_traffic':LightAverageLinear_traffic
+            'AverageTime':AverageTime,
+            'LightAverageTime_weather':LightAverageTime_weather,
+            'LightAverageTime_electricity':LightAverageTime_electricity,
+            'LightAverageTime_etth1':LightAverageTime_etth1,
+            'LightAverageTime_etth2':LightAverageTime_etth2,
+            'LightAverageTime_ettm1':LightAverageTime_ettm1,
+            'LightAverageTime_ettm2':LightAverageTime_ettm2,
+            'LightAverageTime_traffic':LightAverageTime_traffic
         }
         model = model_dict[self.args.model].Model(self.args).float()
 
@@ -82,10 +82,10 @@ class Exp_Main(Exp_Basic):
                 # encoder - decoder
                 if self.args.use_amp:
                     with torch.cuda.amp.autocast():
-                        if any(substr in self.args.model for substr in {'Linear', 'TST'}):
+                        if any(substr in self.args.model for substr in {'Linear','Time', 'TST'}):
                             outputs = self.model(batch_x)
                 else:
-                    if any(substr in self.args.model for substr in {'Linear', 'TST'}):
+                    if any(substr in self.args.model for substr in {'Linear','Time', 'TST'}):
                         outputs = self.model(batch_x)
                 f_dim = -1 if self.args.features == 'MS' else 0
                 outputs = outputs[:, -self.args.pred_len:, f_dim:]
@@ -151,14 +151,14 @@ class Exp_Main(Exp_Basic):
                 # encoder - decoder
                 if self.args.use_amp:
                     with torch.cuda.amp.autocast():
-                        if any(substr in self.args.model for substr in {'Linear', 'TST'}):
+                        if any(substr in self.args.model for substr in {'Linear', 'Time', 'TST'}):
                             outputs = self.model(batch_x)
 
                         f_dim = -1 if self.args.features == 'MS' else 0
                         outputs = outputs[:, -self.args.pred_len:, f_dim:]
                         batch_y = batch_y[:, -self.args.pred_len:, :outputs.shape[2]].to(self.device)
                 else:
-                    if any(substr in self.args.model for substr in {'Linear', 'TST'}):
+                    if any(substr in self.args.model for substr in {'Linear', 'Time', 'TST'}):
                         outputs = self.model(batch_x)
                     f_dim = -1 if self.args.features == 'MS' else 0
                     outputs = outputs[:, -self.args.pred_len:, f_dim:]
@@ -243,7 +243,7 @@ class Exp_Main(Exp_Basic):
                 # encoder - decoder
                 if self.args.use_amp:
                     with torch.cuda.amp.autocast():
-                        if any(substr in self.args.model for substr in {'Linear', 'TST'}):
+                        if any(substr in self.args.model for substr in {'Linear', 'Time', 'TST'}):
                             outputs = self.model(batch_x)
                         else:
                             if self.args.output_attention:
@@ -251,7 +251,7 @@ class Exp_Main(Exp_Basic):
                             else:
                                 outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
                 else:
-                    if any(substr in self.args.model for substr in {'Linear', 'TST'}):
+                    if any(substr in self.args.model for substr in {'Linear', 'Time', 'TST'}):
                             outputs = self.model(batch_x)
                     else:
                         if self.args.output_attention:
@@ -338,7 +338,7 @@ class Exp_Main(Exp_Basic):
                 # encoder - decoder
                 if self.args.use_amp:
                     with torch.cuda.amp.autocast():
-                        if any(substr in self.args.model for substr in {'Linear', 'TST'}):
+                        if any(substr in self.args.model for substr in {'Linear', 'Time', 'TST'}):
                             outputs = self.model(batch_x)
                         else:
                             if self.args.output_attention:
@@ -346,7 +346,7 @@ class Exp_Main(Exp_Basic):
                             else:
                                 outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
                 else:
-                    if any(substr in self.args.model for substr in {'Linear', 'TST'}):
+                    if any(substr in self.args.model for substr in {'Linear', 'Time', 'TST'}):
                         outputs = self.model(batch_x)
                     else:
                         if self.args.output_attention:
