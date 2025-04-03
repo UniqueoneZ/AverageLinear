@@ -9,7 +9,7 @@ The most time-consuming part of the model lies in iterating over all channels, w
 We observed that the model's performance was suboptimal on Traffic datasets. To address this issue, we incorporated Transformer encoders into the channel embedding layer, which improved the model's overall performance not only on Traffic datasets but also on other datasets such as ETTh2 and Solar.  
 
 ### **LightAverageTime**  
-We have incorporated cluster block for the AverageTime to acclecrate the training process, where channel's with high correlection are predicted together, this appoarch has shift the model's training process from channel-wish prediction to group-wish prediction. We have made detail describe in our paper available at https://arxiv.org/abs/2412.20727.
+We have incorporated cluster block for the AverageTime to acclecrate the training process, where channel's with high correlection are predicted together, this appoarch has shift the model's training process from channel-wise prediction to group-wise prediction. We have made detail describe in our paper available at https://arxiv.org/abs/2412.20727.
 
 After the incoprating of Transformer encoders, the overall structure is shown as follow:
 ![](image/overall_structure.jpg)
